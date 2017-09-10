@@ -64,11 +64,14 @@ int main(int argc, char* argv[])
 		thread CreateConsume0(&CreateChidNodesQueue);
 		thread CreateConsume1(&CreateChidNodesQueue);
 		thread CreateConsume2(&CreateChidNodesQueue);
+		thread CreateConsume3(&CreateChidNodesQueue);
+		thread CreateConsume4(&CreateChidNodesQueue);
 
 		CreateConsume0.join();
 		CreateConsume1.join();
 		CreateConsume2.join();
-
+		CreateConsume3.join();
+		CreateConsume4.join();
 		PrintQueueInfo();
 	}
 
@@ -119,7 +122,9 @@ void CreateChidNodesQueue()
 
 		for (int iCountA = 0; iCountA <= 9; iCountA++)
 		{
-			for (int iCountB = 0; iCountB <= 9; iCountB++)
+			int BCountFrom = 0;
+			if (Level == 0) { BCountFrom = iCountA; }
+			for (int iCountB = BCountFrom; iCountB <= 9; iCountB++)
 			{
 				CountA = One * iCountA;
 				CountB = One * iCountB;
@@ -208,5 +213,6 @@ void InitialiseLongNumbers()
 
 void PrintQueueInfo()
 {
-		cout << "Size of Queue : " << FNQueue.ReturnQueueSize() << endl;
+	//int Len = FNQueue.ReturnQueueSize();
+	//cout << "Size of Queue : " << Len << endl;
 }
