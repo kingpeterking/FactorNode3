@@ -5,21 +5,24 @@
 #include "iostream"
 #include "FactorClass.h"
 #include "LongNumber.h"
+#include "FactorNodeQueue.h"
+#include "thread"
 using namespace std;
 
-int CreateChidNodes(FactorNode * FNode, int Level, LongNumber LNTarget);
-int CreateChidNodes2(LongNumber LNTarget, int LevelPassed, LongNumber AValuePassed, LongNumber BValuePassed, LongNumber TotalPassed, LongNumber RemainderPassed);
-int CreateChidNodesQueue(LongNumber LNTarget, int LevelPassed, LongNumber AValuePassed, LongNumber BValuePassed, LongNumber TotalPassed, LongNumber RemainderPassed);
+// Function Declarations
+void CreateChidNodesQueue();
+void InitialiseLongNumbers();
+void PrintQueueInfo();
 
 // 	Create 1 and 0 as Long Numbers - here so they have global scope and don't need to reinitialise in each routine
 LongNumber One(1);
 LongNumber Zero(1);
 LongNumber MinusOne(1);
+// Create the queue
+FactorNodeQueue FNQueue;
 
 // Counter for number solved
 int SolvedCount = 0;
-int IterationCount = 0; 
-
 
 int main(int argc, char* argv[])
 {
@@ -35,10 +38,158 @@ int main(int argc, char* argv[])
 	LongNumber LNTarget(Target);
 	int iTarget = LNTarget[0];
 
+	// set up One, Zero and MinusOne
+	InitialiseLongNumbers();
+
 	cout << "Factoriser START\n";
 	cout << "Input Number : ";
 	PrintLongNumberLR(LNTarget);
 
+	// Create the head item on the queue
+	FactorNode FNHeadofQueue( 
+		LNTarget,											// TargetPassed,
+		0,													// LevelPassed,
+		Zero,												// AValuePassed,
+		Zero,												// BValuePassed,
+		Zero,												// TotalPassed,
+		Zero,												// RemainderPassed,
+		false												// FactorCompletePassed
+	);
+	FNQueue.Push(FNHeadofQueue);
+
+	// kick off the threads that will consume and create new queue items
+	using namespace placeholders;
+	while (FNQueue.ReturnQueueSize() > 0)
+	{
+		thread CreateConsume0(&CreateChidNodesQueue);
+		thread CreateConsume1(&CreateChidNodesQueue);
+		thread CreateConsume2(&CreateChidNodesQueue);
+
+		CreateConsume0.join();
+		CreateConsume1.join();
+		CreateConsume2.join();
+
+		PrintQueueInfo();
+	}
+
+
+
+
+	cout << "Factoriser : Found : " << SolvedCount << " END" << endl;
+	return 0;
+}
+
+
+
+
+
+void CreateChidNodesQueue()
+{
+	if (FNQueue.ReturnQueueSize() != 0)
+	{
+
+
+		// Add new elements to the queue or solve ones that are already there 
+		// cout << "Create Child" << endl;
+
+		// Get the next element from the queue 
+		FactorNode FNItem = FNQueue.Pop();
+
+		// Get the details from the FactorNode
+		LongNumber LNTarget = FNItem.GetTarget();
+		int Level = FNItem.GetLevel();
+		LongNumber AValuePassed = FNItem.GetAValue();
+		LongNumber BValuePassed = FNItem.GetBValue();
+		LongNumber Total = FNItem.GetTotal();
+		LongNumber RemainderPassed = FNItem.GetRemainder();
+
+		int ResultLen = LNTarget.GetLongNumberLength();
+
+		LongNumber CountA(1);
+		LongNumber CountB(1);
+		LongNumber MultResult(ResultLen * 2);
+		LongNumber MultValue(ResultLen * 2);
+		LongNumber Remainder(ResultLen * 2);
+		LongNumber MultResultRP(1);
+		LongNumber LNTargetRP(1);
+		LongNumber AValueNew(ResultLen * 2);
+		LongNumber BValueNew(ResultLen * 2);
+
+		int iTarget = LNTarget[Level];
+
+		for (int iCountA = 0; iCountA <= 9; iCountA++)
+		{
+			for (int iCountB = 0; iCountB <= 9; iCountB++)
+			{
+				CountA = One * iCountA;
+				CountB = One * iCountB;
+				if (Level > 0)
+				{
+					AValueNew = Concatenate(CountA, AValuePassed);
+					BValueNew = Concatenate(CountB, BValuePassed);
+				}
+				else
+				{
+					// otherwise A and B are not added to previous values 
+					AValueNew = CountA;
+					BValueNew = CountB;
+				}
+				MultResult = AValueNew * BValueNew;
+				MultResultRP = ReturnPart(MultResult, Level, 1);				// checks not working
+				if (MultResultRP == MinusOne)
+				{
+					//cout << "Minus One"; 
+				}
+				else
+				{
+					LNTargetRP = ReturnPart(LNTarget, Level, 1);
+					if (MultResultRP == LNTargetRP)
+					{
+						MultValue = AValueNew * BValueNew;
+						if (MultValue <= LNTarget)
+						{
+							LongNumber Remainder = LNTarget - MultValue;
+							bool FactorComplete = false;
+							if (Remainder == Zero) { FactorComplete = true; }
+							if (FactorComplete)
+							{
+								// if solved then print
+								cout << "SOLVED " << endl;
+								cout << "AValue : ";
+								PrintLongNumberLR(AValueNew);
+								cout << "BValue : ";
+								PrintLongNumberLR(BValueNew);
+								SolvedCount++;
+							}
+							else
+							{
+								// cout << "Adding to Queue" << endl;
+								// CreateChidNodes2(LNTarget, Level + 1, AValueNew, BValueNew, Total, Remainder);
+								FactorNode FNAdd(
+									LNTarget,		// TargetPassed
+									Level + 1,		// LevelPassed
+									AValueNew,		// AValuePassed
+									BValueNew,		// BValuePassed
+									Total,			// TotalPassed
+									Remainder,		// RemainderPassed
+									false			// FactorCompletePassed
+								);
+								// PrintFactorNode(&FNAdd);
+								FNQueue.Push(FNAdd);
+
+							}
+						}
+					}
+				}
+			}
+		}
+
+	}
+
+}
+
+void InitialiseLongNumbers()
+{
 	// 	Set One as a Long Number
 	One.SetLongNumber(1, 0);
 	One.SetLongNumberBase(10);
@@ -52,380 +203,10 @@ int main(int argc, char* argv[])
 	MinusOne.SetLongNumberBase(10);
 	MinusOne.SetLongNumberSign(-1);
 
-	// create head of list 
-	FactorNode FHead(nullptr, 0, Zero, Zero, Zero, Zero, false);
-	FactorNode * FHeadPt = & FHead;
-
-	// Create the children 
-	// int SolvedCount = CreateChidNodes(FHeadPt, 0, LNTarget);			// Level = 1, Head = 0
-	int SolvedCount = CreateChidNodes2(LNTarget, 0, Zero, Zero, Zero, Zero);
-	// int SolvedCount = CreateChidNodesQueue(LNTarget, 0, Zero, Zero, Zero, Zero);
-
-	cout << "Factoriser : Found : " << SolvedCount << " END" << endl;
-	return 0;
-}
-
-int CreateChidNodes(FactorNode * FNode, int Level, LongNumber LNTarget)
-{
-	//cout << endl << "Start create Child Function" << endl;
-	int ResultLen = LNTarget.GetLongNumberLength();
-	LongNumber AValue = FNode->GetAValue(); 
-		//cout << "AValue : ";
-		//PrintLongNumberLR(AValue);
-	LongNumber BValue = FNode->GetBValue();
-		//cout << "BValue : ";
-		//PrintLongNumberLR(BValue);
-	LongNumber Total = FNode->GetTotal();
-		//cout << "Total : ";
-		//PrintLongNumberLR(BValue);
-	LongNumber CountA(1);
-	LongNumber CountB(1);
-	LongNumber Mult1(2);
-	LongNumber Mult2(ResultLen * 2);
-	LongNumber Mult3(ResultLen * 2);
-	LongNumber MultResult(ResultLen * 2 );
-	LongNumber MultValue(ResultLen * 2);
-	LongNumber Remainder(ResultLen * 2);
-	LongNumber MultResultRP(1);
-	LongNumber LNTargetRP(1);
-	LongNumber AValueNew(ResultLen * 2);
-	LongNumber BValueNew(ResultLen * 2);
-
-	int iTarget = LNTarget[Level];
-		//cout << "LNTarget : ";
-		//PrintLongNumberLR(LNTarget);
-		//cout << "iTarget : " << iTarget << endl;
-
-	for (int iCountA = 0; iCountA <= 9; iCountA++)
-	{
-		for (int iCountB = 0; iCountB <= 9; iCountB++)
-		{
-			// Start of loop 
-				//cout << endl << "Loop Start " << endl;
-				//cout << "Level : " << Level << endl;
-			
-			CountA = One * iCountA;
-			CountB = One * iCountB;
-			if (Level > 0)
-			{
-				AValueNew = Concatenate(CountA, AValue);
-				//cout << "AValueNew : ";
-				//PrintLongNumberLR(AValueNew);
-				BValueNew = Concatenate(CountB, BValue);
-				//cout << "BValue : ";
-				//PrintLongNumberLR(BValueNew);
-			}
-			else
-			{
-				// otherwise A and B are not added to previous values 
-				AValueNew = CountA;
-				//cout << "AValueNew : ";
-				//PrintLongNumberLR(AValueNew);
-				BValueNew = CountB;
-				//cout << "BValueNew : ";
-				//PrintLongNumberLR(BValueNew);
-			}
-			MultResult = AValueNew * BValueNew;
-			// PrintLongNumberLR(MultResult);
-			MultResultRP = ReturnPart(MultResult, Level, 1);				// checks not working
-				//cout << "MultResultRP : ";
-				//PrintLongNumberLR(MultResultRP);
-			if (MultResultRP == MinusOne) 
-				{ 
-				//cout << "Minus One"; 
-				} else
-				{ 
-				LNTargetRP = ReturnPart(LNTarget, Level, 1);
-					//cout << "LNTargetRP : ";
-					//PrintLongNumberLR(LNTargetRP);
-			
-					if (MultResultRP == LNTargetRP)
-					{
-
-						MultValue = AValueNew * BValueNew;
-						//cout << "MultValue : ";
-						//PrintLongNumberLR(MultValue);
-
-						if (MultValue <= LNTarget)
-						{
-							LongNumber Remainder = LNTarget - MultValue;
-							//cout << "Remainder : ";
-							//PrintLongNumberLR(Remainder);
-							bool FactorComplete = false;
-							if (Remainder == Zero) { FactorComplete = true; }
-							FactorNode * FNewNodePt = new FactorNode(FNode, Level + 1, AValueNew, BValueNew, MultValue, Remainder, FactorComplete);
-							//cout << "FNewNodePt : " << &FNewNodePt << endl;
-							//cout << "AValue : ";
-							//PrintLongNumberLR(AValueNew);
-							//cout << "BValue : ";
-							//PrintLongNumberLR(BValueNew);
-							SetParentChild(FNode, *FNewNodePt);
-							if (FactorComplete)
-							{
-								PrintFactorNode(FNewNodePt);				// if solved then print
-								SolvedCount++;
-							}
-							else
-							{
-								//cout << "Recursing" << endl;
-								CreateChidNodes(FNewNodePt, Level + 1, LNTarget);
-							}
-						}
-					}
-				}
-			}
-		}
-
-	return SolvedCount;
 }
 
 
-int CreateChidNodes2(LongNumber LNTarget, int LevelPassed, LongNumber AValuePassed, LongNumber BValuePassed, LongNumber TotalPassed, LongNumber RemainderPassed)
+void PrintQueueInfo()
 {
-	// without using nodes
-	// cout << "Iteration Count " << IterationCount++ << endl;
-
-	int Level = LevelPassed;
-	//cout << endl << "Start create Child Function" << endl;
-	int ResultLen = LNTarget.GetLongNumberLength();
-	//cout << "AValue : ";
-	//PrintLongNumberLR(AValue);
-	//cout << "BValue : ";
-	//PrintLongNumberLR(BValue);
-	LongNumber Total = TotalPassed;
-	//cout << "Total : ";
-	//PrintLongNumberLR(BValue);
-	LongNumber CountA(1);
-	LongNumber CountB(1);
-	//LongNumber Mult1(2);
-	//LongNumber Mult2(ResultLen * 2);
-	//LongNumber Mult3(ResultLen * 2);
-	LongNumber MultResult(ResultLen * 2);
-	LongNumber MultValue(ResultLen * 2);
-	LongNumber Remainder(ResultLen * 2);
-	LongNumber MultResultRP(1);
-	LongNumber LNTargetRP(1);
-	LongNumber AValueNew(ResultLen * 2);
-	LongNumber BValueNew(ResultLen * 2);
-
-	int iTarget = LNTarget[Level];
-	//cout << "LNTarget : ";
-	//PrintLongNumberLR(LNTarget);
-	//cout << "iTarget : " << iTarget << endl;
-
-	for (int iCountA = 0; iCountA <= 9; iCountA++)
-	{
-		for (int iCountB = 0; iCountB <= 9; iCountB++)
-		{
-			// Start of loop 
-			//cout << endl << "Loop Start " << endl;
-			//cout << "Level : " << Level << endl;
-
-			CountA = One * iCountA;
-			CountB = One * iCountB;
-			if (Level > 0)
-			{
-				AValueNew = Concatenate(CountA, AValuePassed);
-				//cout << "AValueNew : ";
-				//PrintLongNumberLR(AValueNew);
-				BValueNew = Concatenate(CountB, BValuePassed);
-				//cout << "BValue : ";
-				//PrintLongNumberLR(BValueNew);
-			}
-			else
-			{
-				// otherwise A and B are not added to previous values 
-				AValueNew = CountA;
-				//cout << "AValueNew : ";
-				//PrintLongNumberLR(AValueNew);
-				BValueNew = CountB;
-				//cout << "BValueNew : ";
-				//PrintLongNumberLR(BValueNew);
-			}
-			MultResult = AValueNew * BValueNew;
-			// PrintLongNumberLR(MultResult);
-			MultResultRP = ReturnPart(MultResult, Level, 1);				// checks not working
-																			//cout << "MultResultRP : ";
-																			//PrintLongNumberLR(MultResultRP);
-			if (MultResultRP == MinusOne)
-			{
-				//cout << "Minus One"; 
-			}
-			else
-			{
-				LNTargetRP = ReturnPart(LNTarget, Level, 1);
-				//cout << "LNTargetRP : ";
-				//PrintLongNumberLR(LNTargetRP);
-
-				if (MultResultRP == LNTargetRP)
-				{
-
-					MultValue = AValueNew * BValueNew;
-					//cout << "MultValue : ";
-					//PrintLongNumberLR(MultValue);
-
-					if (MultValue <= LNTarget)
-					{
-						LongNumber Remainder = LNTarget - MultValue;
-						//cout << "Remainder : ";
-						//PrintLongNumberLR(Remainder);
-						bool FactorComplete = false;
-						if (Remainder == Zero) { FactorComplete = true; }
-						//cout << "AValue : ";
-						//PrintLongNumberLR(AValueNew);
-						//cout << "BValue : ";
-						//PrintLongNumberLR(BValueNew);
-						if (FactorComplete)
-						{				
-							// if solved then print
-							cout << "SOLVED " << endl;
-							cout << "AValue : ";
-							PrintLongNumberLR(AValueNew);
-							cout << "BValue : ";
-							PrintLongNumberLR(BValueNew);
-							SolvedCount++;
-						}
-						else
-						{
-							//cout << "Recursing" << endl;
-							CreateChidNodes2(LNTarget, Level + 1, AValueNew, BValueNew, Total, Remainder);
-						}
-					}
-				}
-			}
-		}
-	}
-
-	return SolvedCount;
-
-}
-
-
-
-
-int CreateChidNodesQueue(LongNumber LNTarget, int LevelPassed, LongNumber AValuePassed, LongNumber BValuePassed, LongNumber TotalPassed, LongNumber RemainderPassed)
-{
-	// without using nodes
-	cout << "Iteration Count " << IterationCount++ << endl;
-
-	int Level = LevelPassed;
-	//cout << endl << "Start create Child Function" << endl;
-	int ResultLen = LNTarget.GetLongNumberLength();
-	//cout << "AValue : ";
-	//PrintLongNumberLR(AValue);
-	//cout << "BValue : ";
-	//PrintLongNumberLR(BValue);
-	LongNumber Total = TotalPassed;
-	//cout << "Total : ";
-	//PrintLongNumberLR(BValue);
-	LongNumber CountA(1);
-	LongNumber CountB(1);
-	//LongNumber Mult1(2);
-	//LongNumber Mult2(ResultLen * 2);
-	//LongNumber Mult3(ResultLen * 2);
-	LongNumber MultResult(ResultLen * 2);
-	LongNumber MultValue(ResultLen * 2);
-	LongNumber Remainder(ResultLen * 2);
-	LongNumber MultResultRP(1);
-	LongNumber LNTargetRP(1);
-	LongNumber AValueNew(ResultLen * 2);
-	LongNumber BValueNew(ResultLen * 2);
-
-	int iTarget = LNTarget[Level];
-	//cout << "LNTarget : ";
-	//PrintLongNumberLR(LNTarget);
-	//cout << "iTarget : " << iTarget << endl;
-
-	for (int iCountA = 0; iCountA <= 9; iCountA++)
-	{
-		for (int iCountB = 0; iCountB <= 9; iCountB++)
-		{
-			// Start of loop 
-			//cout << endl << "Loop Start " << endl;
-			//cout << "Level : " << Level << endl;
-
-			CountA = One * iCountA;
-			CountB = One * iCountB;
-			if (Level > 0)
-			{
-				AValueNew = Concatenate(CountA, AValuePassed);
-				//cout << "AValueNew : ";
-				//PrintLongNumberLR(AValueNew);
-				BValueNew = Concatenate(CountB, BValuePassed);
-				//cout << "BValue : ";
-				//PrintLongNumberLR(BValueNew);
-			}
-			else
-			{
-				// otherwise A and B are not added to previous values 
-				AValueNew = CountA;
-				//cout << "AValueNew : ";
-				//PrintLongNumberLR(AValueNew);
-				BValueNew = CountB;
-				//cout << "BValueNew : ";
-				//PrintLongNumberLR(BValueNew);
-			}
-			MultResult = AValueNew * BValueNew;
-			// PrintLongNumberLR(MultResult);
-			MultResultRP = ReturnPart(MultResult, Level, 1);				// checks not working
-																			//cout << "MultResultRP : ";
-																			//PrintLongNumberLR(MultResultRP);
-			if (MultResultRP == MinusOne)
-			{
-				//cout << "Minus One"; 
-			}
-			else
-			{
-				LNTargetRP = ReturnPart(LNTarget, Level, 1);
-				//cout << "LNTargetRP : ";
-				//PrintLongNumberLR(LNTargetRP);
-
-				if (MultResultRP == LNTargetRP)
-				{
-
-					MultValue = AValueNew * BValueNew;
-					//cout << "MultValue : ";
-					//PrintLongNumberLR(MultValue);
-
-					if (MultValue <= LNTarget)
-					{
-						LongNumber Remainder = LNTarget - MultValue;
-						//cout << "Remainder : ";
-						//PrintLongNumberLR(Remainder);
-						bool FactorComplete = false;
-						if (Remainder == Zero) { FactorComplete = true; }
-						//cout << "AValue : ";
-						//PrintLongNumberLR(AValueNew);
-						//cout << "BValue : ";
-						//PrintLongNumberLR(BValueNew);
-						if (FactorComplete)
-						{
-							// if solved then print
-							cout << "SOLVED " << endl;
-							cout << "AValue : ";
-							PrintLongNumberLR(AValueNew);
-							cout << "BValue : ";
-							PrintLongNumberLR(BValueNew);
-							SolvedCount++;
-						}
-						else
-						{
-							//cout << "Recursing" << endl;
-							// CreateChidNodes2(LNTarget, Level + 1, AValueNew, BValueNew, Total, Remainder);
-							cout << "Add to Queue : " << endl;
-							cout << "LNTarget : " << LNTarget << endl;
-							cout << "Level + 1 : " << Level + 1 << endl;
-							cout << "AValueNew : " << AValueNew << endl;
-							cout << "BValueNew : " << BValueNew << endl;
-							cout << "Total : " << Total << endl;
-							cout << "Remainder : " << Remainder << endl;
-						}
-					}
-				}
-			}
-		}
-	}
-
-	return SolvedCount;
-
+		cout << "Size of Queue : " << FNQueue.ReturnQueueSize() << endl;
 }

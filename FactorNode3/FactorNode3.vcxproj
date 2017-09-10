@@ -141,6 +141,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FactorClass.h" />
+    <ClInclude Include="FactorNodeQueue.h" />
     <ClInclude Include="LongNumber.h" />
     <ClInclude Include="LongNumberDivision.h" />
     <ClInclude Include="stdafx.h" />
@@ -149,6 +150,7 @@
   <ItemGroup>
     <ClCompile Include="FactorClass.cpp" />
     <ClCompile Include="FactorNode3.cpp" />
+    <ClCompile Include="FactorNodeQueue.cpp" />
     <ClCompile Include="LongNumber.cpp" />
     <ClCompile Include="LongNumberDivision.cpp" />
     <ClCompile Include="stdafx.cpp">
