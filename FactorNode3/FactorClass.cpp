@@ -12,32 +12,23 @@ FactorNode::FactorNode()
 	Zero.SetLongNumberSign(0);
 
 	// Creates a new node with no data or values 
-	Target = Zero;
 	Level = 0;
 	AValue = Zero;
 	BValue = Zero;
-	Total = Zero;
-	Remainder = Zero;
 	FactorComplete = false;
 }
 
 
 FactorNode::FactorNode(
-	LongNumber TargetPassed,
 	int LevelPassed,
 	LongNumber AValuePassed,
 	LongNumber BValuePassed,
-	LongNumber TotalPassed,
-	LongNumber RemainderPassed,
 	bool FactorCompletePassed)
 {
 	// Creates a new node with the data passed
-	Target = TargetPassed;
 	Level = LevelPassed;
 	AValue = AValuePassed;
 	BValue = BValuePassed;
-	Total = TotalPassed;
-	Remainder = RemainderPassed;
 	FactorComplete = FactorCompletePassed;
 
 }
@@ -46,12 +37,6 @@ FactorNode::~FactorNode()
 {
 }
 
-
-
-void FactorNode::SetTarget(LongNumber TargetPassed)
-{
-	Target = TargetPassed;
-}
 
 void FactorNode::SetLevel(int LevelPassed)
 {
@@ -69,16 +54,12 @@ void FactorNode::SetBValue(LongNumber BValuePassed)
 
 }
 
-void FactorNode::SetRemainder(LongNumber RemainderPassed)
-{
-	Remainder = RemainderPassed;
-}
-
-
 void FactorNode::SetFactorComplete(bool YN)
 {
 	FactorComplete = YN;
 }
+
+
 
 LongNumber FactorNode::GetAValue()
 {
@@ -90,20 +71,6 @@ LongNumber FactorNode::GetBValue()
 	return BValue;
 }
 
-LongNumber FactorNode::GetRemainder()
-{
-	return Remainder;
-}
-
-LongNumber FactorNode::GetTotal()
-{
-	return Total;
-}
-
-LongNumber FactorNode::GetTarget()
-{
-	return Target;
-}
 
 int FactorNode::GetLevel()
 {
@@ -116,18 +83,13 @@ bool FactorNode::GetFactorComplete()
 }
 
 
-
-
 void PrintFactorNode(FactorNode * FNode)
 {
 	// Print the details for this node
 	cout << "Node : " << endl;
-	cout << "Target : " << FNode->GetTarget() << endl;
 	cout << "  Level : " << FNode->GetLevel() << endl;
 	cout << "  AValue : " << FNode->GetAValue() << endl;
 	cout << "  BValue : " << FNode->GetBValue() << endl;
-	cout << "  Total : " << FNode->GetTotal() << endl;
-	cout << "  Remainder : " << FNode->GetRemainder() << endl;
 	cout << "  Factor Complete: ";
 	if (FNode->GetFactorComplete())
 	{

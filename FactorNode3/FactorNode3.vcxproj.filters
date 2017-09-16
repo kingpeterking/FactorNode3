@@ -27,9 +27,6 @@
     <ClInclude Include="LongNumber.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LongNumberDivision.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="FactorClass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -45,9 +42,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="LongNumber.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="LongNumberDivision.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FactorClass.cpp">
