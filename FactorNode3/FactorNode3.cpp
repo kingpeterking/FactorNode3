@@ -7,6 +7,7 @@
 #include "LongNumber.h"
 #include "FactorNodeQueue.h"
 #include "thread"
+#include "fstream"
 using namespace std;
 
 // Function Declarations
@@ -22,6 +23,7 @@ LongNumber MinusOne(1);
 // Set the target as a global variable so we don't need to pass it around and copy it
 LongNumber *LNTarget;
 int ResultLen;
+int IterCount;
 
 // Create the queue
 FactorNodeQueue FNQueue;
@@ -46,10 +48,14 @@ int main(int argc, char* argv[])
 
 	// set up One, Zero and MinusOne
 	InitialiseLongNumbers();
+	IterCount = 0; 
 
 	cout << "Factoriser START\n";
 	cout << "Input Number : ";
-	cout << *LNTarget << endl;
+	PrintLongNumberLR(ArgPassed);
+
+	// Clear the text file for node overflow
+	remove("QueueNode.txt");
 
 	// Create the head item on the queue
 	FactorNode FNHeadofQueue( 
@@ -78,7 +84,7 @@ int main(int argc, char* argv[])
 		// PrintQueueInfo();
 	}
 
-	cout << "Factoriser : Found : " << SolvedCount << " END" << endl;
+	cout << "Factoriser : Found : " << SolvedCount << " Steps : " << IterCount << " END" << endl;
 	return 0;
 }
 
@@ -146,23 +152,27 @@ void CreateChidNodesQueue()
 						PrintLongNumberLR(AValuePassed);
 						cout << "BValue : ";
 						PrintLongNumberLR(BValuePassed);
+						cout << "QL:" << FNQueue.ReturnQueueSize() << endl;
 						SolvedCount++;
 						break;
-					case 1:					// greater than so do nothing 
+					case 1: // greater than so exit B loop
+						goto ExitBLoop;
 						break;
 					default:
 						break;
-					}
+					} // end switch
 
 					
-				}
+				} // end if result
 				
-			}
-		}
+			} // end B loop
+		ExitBLoop:;
+			IterCount++;
+		} // end A loop
 
-	}
+	} // end if queue
 
-}
+} // end function 
 
 void InitialiseLongNumbers()
 {

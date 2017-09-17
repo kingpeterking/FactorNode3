@@ -546,12 +546,27 @@ LongNumber LongNumberMultiply(LongNumber ArgA, LongNumber ArgB)
 
 
 
-ostream & operator<<(ostream & stream, const LongNumber& ArgA)
+ostream & operator<<(ostream & stream, LongNumber ArgA)
 {
-	PrintLongNumberLRNOENDL(ArgA);
+	// was 
+	// 2nd arg was const LongNumber & ArgA
+	// PrintLongNumberLRNOENDL(ArgA);
+	// return stream;
+
+	if (ArgA.GetLongNumberSign() == -1)
+	{
+		stream << "-";
+	}
+	for (int iCount = ArgA.GetLongNumberLength() - 1; iCount >= 0; iCount--)
+	{
+		stream << ArgA.GetValue(iCount);
+	}
+
 	return stream;
 
 }
+
+
 
 int LongNumberCompare(LongNumber ArgA, LongNumber ArgB)
 {

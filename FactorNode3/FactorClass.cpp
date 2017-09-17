@@ -88,8 +88,10 @@ void PrintFactorNode(FactorNode * FNode)
 	// Print the details for this node
 	cout << "Node : " << endl;
 	cout << "  Level : " << FNode->GetLevel() << endl;
-	cout << "  AValue : " << FNode->GetAValue() << endl;
-	cout << "  BValue : " << FNode->GetBValue() << endl;
+	cout << "  AValue : ";
+	PrintLongNumberLR(FNode->GetAValue());
+	cout << "  BValue : ";
+	PrintLongNumberLR(FNode->GetBValue());
 	cout << "  Factor Complete: ";
 	if (FNode->GetFactorComplete())
 	{

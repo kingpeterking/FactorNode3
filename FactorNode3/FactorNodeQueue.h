@@ -24,6 +24,11 @@ public:
 	// Info about the queue
 	int ReturnQueueSize();
 
+	// Save Queue entry to file and read back
+	void WriteNodeToFile(FactorNode Node, const char * FileName);
+	FactorNode ReadNodeFromFile();
+
+
 private:
 
 	queue<FactorNode> queue_;

@@ -27,8 +27,8 @@ public:
 	friend void PrintLongNumber(LongNumber ArgA);										// prints long number in verbose format from right to left (ie as it is stored)
 	friend void PrintLongNumberLR(LongNumber ArgA);										// prints long number normally left to right with endl
 	friend void PrintLongNumberLRNOENDL(LongNumber ArgA);								// prints long number normally left to right without endl
-	friend ostream& operator<< (ostream& stream, const LongNumber& ArgA);				// overloads << for Long Numbers
-
+	friend ostream& operator<< (ostream & stream, LongNumber ArgA);						// overloads << for Long Numbers to ostream
+	
 	// Arithmetic Operations
 	friend LongNumber LongNumberAdd(LongNumber ArgA, LongNumber ArgB);				// adds
 	friend LongNumber LongNumberMultiply(LongNumber ArgA, LongNumber ArgB);			// multiplies two Long Numbers (base 10)
