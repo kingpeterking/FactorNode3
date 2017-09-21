@@ -10,7 +10,7 @@
 
 using namespace std;
 
-const int MaxQueueLen = 50; 
+const int MaxQueueLen = 5000; 
 int FileNodeCount;
 
 // Constructor = default
@@ -126,11 +126,13 @@ FactorNode FactorNodeQueue::ReadNodeFromFile()
 
 	// copy the rest into a new file
 	ofstream QueueFileTemp(FileNameTemp, ios::app);
-
+	
+	int iCountRead = 0;
 	while (!QueueFile.eof())
 	{
 		QueueFile >> InChar;
 		QueueFileTemp << InChar << endl;
+		// if (iCountRead >= FileNodeCount) { break; }
 	}
 
 	QueueFile.close();
